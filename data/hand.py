@@ -13,7 +13,9 @@ class Hand:
         # General Info
         self.gameId = 0
         self.date = ""
-        self.blind = 0
+        self.hour = ""
+        self.small_blind = 0
+        self.big_blind = 0
         self.ante = 0
         self.positions = {}
         self.board = []

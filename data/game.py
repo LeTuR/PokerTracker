@@ -14,10 +14,11 @@ class Game:
         # General Info
         self.date = ""
         self.buyIn = 0
+        self.rake = 0
         self.prizePool = 0
         self.gameFormat = ""
-        self.players = []
-        self.hands = []
+        self.players = {}
+        self.hands = {}
 
     def __str__(self):
         printed = '<' + "Game ID : " + str(self.id) + '>'
