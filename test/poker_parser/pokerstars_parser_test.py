@@ -1,4 +1,4 @@
-from poker_parser.poker_stars_parser import PokerStarsParser
+from poker_parser.pokerstars_parser import PokerStarsParser
 from data.hand import SeatInfo, Action, ActionType
 from data.player import Player
 from data.card import Color, Value, Card
@@ -163,4 +163,43 @@ def test_show_down_parser():
     assert parser.current_hand.seats[2].cards[1] == Card(Value.NINE, Color.DIAMONDS)
     assert parser.current_hand.seats[3].cards[0] == Card(Value.TWO, Color.SPADES)
     assert parser.current_hand.seats[3].cards[1] == Card(Value.ACE, Color.HEARTS)
+
+
+def test_hand_parser():
+    parser = PokerStarsParser()
+
+    lines = ["PokerStars Hand #202004487429: Tournament #2642898548, €0.93+€0.07 EUR Hold'em No Limit - "
+             "Level I (10/20) - 2019/07/04 21:32:32 CET [2019/07/04 15:32:32 ET]",
+             "Table '2642898548 1' 3-max Seat #3 is the button",
+             "Seat 1: leti5795 (440 in chips)",
+             "Seat 2: onucee (450 in chips)",
+             "Seat 3: MaGiCLeTuR (610 in chips)",
+             "leti5795: posts small blind 10",
+             "onucee: posts big blind 20",
+             "*** HOLE CARDS ***",
+             "Dealt to MaGiCLeTuR [Qd 2c]",
+             "MaGiCLeTuR: folds",
+             "leti5795: calls 10",
+             "onucee: checks",
+             "*** FLOP *** [Ts Kc 9d]",
+             "leti5795: checks",
+             "onucee: checks",
+             "*** TURN *** [Ts Kc 9d] [3c]",
+             "leti5795: checks",
+             "onucee: checks",
+             "*** RIVER *** [Ts Kc 9d 3c] [3s]",
+             "leti5795: checks",
+             "onucee: checks",
+             "*** SHOW DOWN ***",
+             "leti5795: shows [7d Js] (a pair of Threes)",
+             "onucee: mucks hand",
+             "leti5795 collected 40 from pot",
+             "*** SUMMARY ***",
+             "Total pot 40 | Rake 0",
+             "Board [Ts Kc 9d 3c 3s]",
+             "Seat 1: leti5795 (small blind) showed [7d Js] and won (40) with a pair of Threes",
+             "Seat 2: onucee (big blind) mucked [2d 5s]",
+             "Seat 3: MaGiCLeTuR (button) folded before Flop (didn't bet)"]
+
+    parser.hand_parser(lines)
 

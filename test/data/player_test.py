@@ -1,4 +1,4 @@
-from dataStructure.player import Player
+from data.player import Player
 
 
 def test_player_constructor():

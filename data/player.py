@@ -1,9 +1,12 @@
 class Player:
-    """Class Player contains player relative information
+    """
+    Class Player contains player relative information
     """
     def __init__(self, pseudo):
-        """Initialize the Player class
-        with default values"""
+        """
+        Initialize the Player class
+        with default values
+        """
         # Class Reference
         self.pseudo = pseudo
         # General Info

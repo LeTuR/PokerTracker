@@ -1,4 +1,4 @@
-from dataStructure.hand import Hand
+from data.hand import Hand
 
 
 def test_hand_constructor():
