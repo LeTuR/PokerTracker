@@ -91,7 +91,13 @@ class PokerStarsParser:
         ["BTN", "SB", "BB", "UTG", "UTG+1", "UTG+2", "MP1", "MP2", "MP3", "CO"],
     ]
 
-    def __init__(self):
+    def __init__(self, hand_file):
+        """
+        Parse a hand given in argument.
+
+        :param hand_file: the hand to parse (basically a string)
+        """
+        self.hand_file = hand_file
 
         # header info
         self.hand_id = 0      # Hand id
@@ -106,15 +112,16 @@ class PokerStarsParser:
         self.hour = ""        # hour
 
         # Set up info
-        self.table_name = ""  # Table name
-        self.table_size = ""  # Table size
-        self.button_seat = 0  # Indicate the seat with the button
+        self.table_name = ""     # Table name
+        self.table_size = ""     # Table size
+        self.players_number = 0  # Indicate the number of players at the table
+        self.button_seat = 0     # Indicate the seat with the button
 
         # Players info :
-        self.cards = {}     # key: position_name         | value: cards of the player
-        self.stacks = {}    # key: position_name         | value: initial stack of the player
-        self.players = {}   # key: pseudo of the players | value: position_name
-        self.position = {}  # key: position_name         | value: pseudo of the players
+        self.cards = {}      # key: position_name         | value: cards of the player
+        self.stacks = {}     # key: position_name         | value: initial stack of the player
+        self.players = {}    # key: pseudo of the players | value: position_name
+        self.positions = {}  # key: position_name         | value: pseudo of the players
 
         # Actions :
         self.action_preflop = []  # Action pre-flop
@@ -128,7 +135,102 @@ class PokerStarsParser:
         self.board_river = []  # Cards on the river
 
         # utility
-        self.parse_part = {}   # key: part name | value: line with action sequence and extra info (board, card dealt)
+        self.part_dict = {}   # key: part name | value: line with action sequence and extra info (board, card dealt)
+
+    def parser_part(self):
+        """
+        Return a dict of the different division of the hand history
+        Not all hands have the name number of parts, it return a dict with the part name as key and content as value
+        """
+        parts = []
+        for part in re.split(r'\*\*\* ([A-Z- ]+) \*\*\*', self.hand_file):  # return [ 'part1', 'splitter1', 'part2',..
+            parts.append(part)
+
+        for i in range(0, len(parts)):
+            if i == 0:
+                self.part_dict['HEADER'] = parts[i].split('\n')
+            if i % 2 != 0:  # number is odd
+                self.part_dict[parts[i]] = parts[i + 1].split('\n')
+
+    def parse_header(self):
+        """
+        Parse the header.
+
+        :return: Extract the base information on the hand context.
+        """
+        players_number = 0
+        lines = self.part_dict['HEADER'].split('\n')
+        for line in lines:
+            # parse first part of the header
+            if line[0:5] == "Poker":
+                # find hand id
+                reg_hand_id = re.search(r'Hand #([0-9-]+):', line)
+                self.hand_id = int(reg_hand_id.group(1))
+                # find tournament id
+                try:
+                    reg_game_id = re.search(r'Tournament #([0-9]+),', line)
+                    self.game_id = int(reg_game_id.group(1))
+                except AttributeError:
+                    pass
+                # find blind
+                reg_blind = re.search(r'\(€?([0-9-.]+)/€?([0-9-.]+)( EUR)?\)', line)
+                self.small_blind = float(reg_blind.group(1))
+                self.big_blind = float(reg_blind.group(2))
+                # find buy in
+                try:
+                    reg_buy_in = re.search(r'€?([0-9-.]+)\+€?([0-9-.]+)( EUR)?', line)
+                    self.buy_in = float(reg_buy_in.group(1)) + float(reg_buy_in.group(2))
+                    self.rake = float(reg_buy_in.group(2))
+                except AttributeError:
+                    pass
+            # parse second part of the header
+            elif line[0:5] == "Table":
+                # find table name
+                reg_table_name = re.search(r'Table \'([0-9A-Za-z ]+)\'', line)
+                self.table_name = reg_table_name.group(1)
+                # find table size
+                try:
+                    reg_table_size = re.search(r'([0-9]+)-max', line)
+                    self.table_size = int(reg_table_size.group(1))
+                except AttributeError:
+                    pass
+                # find button position
+                reg_button_position = re.search(r'Seat #([0-9]+)', line)
+                self.button_seat = int(reg_button_position.group(1))
+            # count the number of players in the game
+            elif line[0:4] == "Seat":
+                players_number += 1
+                self.players_number = players_number
+
+    def parse_setup(self):
+        """
+        Parse the setup part which set the players pseudo, position and stack
+
+        :return: The players pseudo, position and stack
+        """
+        lines = self.part_dict['HEADER'].split('\n')
+        for line in lines:
+            if line[0:4] == "Seat":
+                reg_player = re.search('(.): (.+) \(\$?([0-9-.]+)', line)
+                player_seat = int(reg_player.group(1))
+                player_name = reg_player.group(2)
+                player_stack = float(reg_player.group(3))
+                position = self.position(player_seat)
+                self.positions[position] = player_name
+                self.players[player_name] = position
+                self.stacks[position] = player_stack
+
+    def position(self, seat):
+        """
+        Define the position of the player according to the seat and the
+        button position. The number of players must be set before using this
+        method.
+
+        :param seat: The player seat
+        :return: It returns the player position
+        """
+        index = seat - self.button_seat
+        return PokerStarsParser.position_name_list[self.players_number-2][index]
 
 
     # def header_tournament_parser(self, lines):

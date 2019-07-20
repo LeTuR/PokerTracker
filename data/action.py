@@ -16,9 +16,10 @@ class Action:
     type (UNDEFINED, BET, RAISE, CHECK or FOLD) and an amount
     of chip
     """
-    def __init__(self, action_type=ActionType.UNDEFINED, amount=0):
+    def __init__(self, position="", action_type=ActionType.UNDEFINED, amount=0):
         self.action_type = action_type
         self.amount = amount
+        self.position = position
 
     def __eq__(self, other):
         if self.action_type == other.action_type and self.amount == other.amount:
