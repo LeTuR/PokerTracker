@@ -10,8 +10,7 @@ def create_table_game():
     try:
         conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS t_game(
+        cursor.execute("""CREATE TABLE IF NOT EXISTS t_game(
              d_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
              d_date TEXT,
              d_buyIn INTEGER,
@@ -43,9 +42,7 @@ def insert_game_to_table_game(game):
     try:
         conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
-        cursor.execute("""
-        INSERT INTO t_game(d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings)\
-        ...VALUES(?,?,?,?,?,?,?,?)""",
+        cursor.execute("""INSERT INTO t_game(d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings) VALUES(?,?,?,?,?,?,?,?)""",
                        (game.date,
                         game.buy_in,
                         game.rake,
@@ -71,7 +68,7 @@ def delete_table_game():
     :return:
     """
     try:
-        conn = sqlite3.connect('db_tracker')
+        conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
         cursor.execute("""
         DROP TABLE t_game
@@ -95,7 +92,8 @@ def print_table_game():
     try:
         conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
-        cursor.execute("""SELECT d_date, d_buyIn, d_id FROM t_game""")
+        cursor.execute("""
+        SELECT d_id, d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings FROM t_game""")
         res = cursor.fetchone()
         print(res)
     except sqlite3.OperationalError:
@@ -119,4 +117,4 @@ game_test.earning = 50
 create_table_game()
 insert_game_to_table_game(game_test)
 print_table_game()
-#delete_table_game()
+delete_table_game()
