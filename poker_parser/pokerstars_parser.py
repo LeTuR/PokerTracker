@@ -1,4 +1,5 @@
 import re
+import logging
 from data.action import ActionType, Action
 from data.card import Card, Value, Color
 
@@ -21,10 +22,15 @@ def define_card_color(char):
 
 
 def define_card_value(char):
-    """This function is a transcoder from PokerStars
+    """
+    This function is a transcoder from PokerStars
     cards value representation to the data card value's representation.
     If an unknown character is given, and UNDEFINED value is
-    return"""
+    return
+
+    :param char: the PokerStars character to represent the value of a card
+    :return: Return the card Value
+    """
     if char == '2':
         return Value.TWO
     elif char == '3':
@@ -55,10 +61,28 @@ def define_card_value(char):
         return Value.UNDEFINED
 
 
+def define_card(card):
+    """
+    Returns the cards as a Card
+
+    :param card: card string in PokerStars format
+    :return: the card as a Card
+    """
+    try:
+        value = define_card_value(card[0])
+        color = define_card_color(card[1])
+        return Card(value, color)
+    except AttributeError:
+        pass
+
+
 def define_action(char):
     """
     Take a PokerStars file action as an entry and
     return an ActionType from hand.py
+
+    :param char: PokerStars action as entry
+    :return: ActionType from hand.py
     """
     if char == "checks":
         return ActionType.CHECK
@@ -72,6 +96,39 @@ def define_action(char):
         return ActionType.CALL
     else:
         return ActionType.UNDEFINED
+
+
+def read_action(line):
+    """
+    Read and return an action from PokerStars file
+
+    :param line: an action line
+    :return: a Player Pseudo and an Action [pseudo, action_type, amount]
+    """
+    try:
+        reg_action = re.search(r'(.)+: (.)+', line)
+        player_pseudo = reg_action.group(1)
+        action_type = define_action(reg_action.group(2))
+        print(reg_action.group(2))
+        if action_type == ActionType.CHECK:
+            return [player_pseudo, action_type, 0]
+        elif action_type == ActionType.FOLD:
+            return [player_pseudo, action_type, 0]
+        elif action_type == ActionType.CALL:
+            amount = float(re.search(' €?([0-9-.]+)', line).group(1))
+            return [player_pseudo, action_type, amount]
+        elif action_type == ActionType.BET:
+            amount = float(re.search(' €?([0-9-.]+)', line).group(1))
+            return [player_pseudo, action_type, amount]
+        elif action_type == ActionType.RAISE:
+            amount = float(re.search('to €?([0-9-.]+)', line).group(1))
+            return [player_pseudo, action_type, amount]
+        else:
+            return
+
+    except AttributeError:
+        pass
+
 
 
 class PokerStarsParser:
@@ -137,6 +194,10 @@ class PokerStarsParser:
         # utility
         self.part_dict = {}   # key: part name | value: line with action sequence and extra info (board, card dealt)
 
+        # log manager
+        self.logger = logging.getLogger()
+        self.formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+
     def parser_part(self):
         """
         Return a dict of the different division of the hand history
@@ -159,48 +220,56 @@ class PokerStarsParser:
         :return: Extract the base information on the hand context.
         """
         players_number = 0
-        lines = self.part_dict['HEADER'].split('\n')
-        for line in lines:
-            # parse first part of the header
-            if line[0:5] == "Poker":
-                # find hand id
-                reg_hand_id = re.search(r'Hand #([0-9-]+):', line)
-                self.hand_id = int(reg_hand_id.group(1))
-                # find tournament id
-                try:
-                    reg_game_id = re.search(r'Tournament #([0-9]+),', line)
-                    self.game_id = int(reg_game_id.group(1))
-                except AttributeError:
-                    pass
-                # find blind
-                reg_blind = re.search(r'\(€?([0-9-.]+)/€?([0-9-.]+)( EUR)?\)', line)
-                self.small_blind = float(reg_blind.group(1))
-                self.big_blind = float(reg_blind.group(2))
-                # find buy in
-                try:
-                    reg_buy_in = re.search(r'€?([0-9-.]+)\+€?([0-9-.]+)( EUR)?', line)
-                    self.buy_in = float(reg_buy_in.group(1)) + float(reg_buy_in.group(2))
-                    self.rake = float(reg_buy_in.group(2))
-                except AttributeError:
-                    pass
-            # parse second part of the header
-            elif line[0:5] == "Table":
-                # find table name
-                reg_table_name = re.search(r'Table \'([0-9A-Za-z ]+)\'', line)
-                self.table_name = reg_table_name.group(1)
-                # find table size
-                try:
-                    reg_table_size = re.search(r'([0-9]+)-max', line)
-                    self.table_size = int(reg_table_size.group(1))
-                except AttributeError:
-                    pass
-                # find button position
-                reg_button_position = re.search(r'Seat #([0-9]+)', line)
-                self.button_seat = int(reg_button_position.group(1))
-            # count the number of players in the game
-            elif line[0:4] == "Seat":
-                players_number += 1
-                self.players_number = players_number
+        try:
+            lines = self.part_dict['HEADER'].split('\n')
+            for line in lines:
+
+                # parse first part of the header : PokerStars basic info
+                if line[0:5] == "Poker":
+                    # find hand id
+                    reg_hand_id = re.search(r'Hand #([0-9-]+):', line)
+                    self.hand_id = int(reg_hand_id.group(1))
+                    # find tournament id
+                    try:
+                        reg_game_id = re.search(r'Tournament #([0-9]+),', line)
+                        self.game_id = int(reg_game_id.group(1))
+                    except AttributeError:
+                        pass
+                    # find blind
+                    reg_blind = re.search(r'\(€?([0-9-.]+)/€?([0-9-.]+)( EUR)?\)', line)
+                    self.small_blind = float(reg_blind.group(1))
+                    self.big_blind = float(reg_blind.group(2))
+                    # find buy in
+                    try:
+                        reg_buy_in = re.search(r'€?([0-9-.]+)\+€?([0-9-.]+)( EUR)?', line)
+                        self.buy_in = float(reg_buy_in.group(1)) + float(reg_buy_in.group(2))
+                        self.rake = float(reg_buy_in.group(2))
+                    except AttributeError:
+                        pass
+
+                # parse second part of the header : Table info
+                elif line[0:5] == "Table":
+                    # find table name
+                    reg_table_name = re.search(r'Table \'([0-9A-Za-z ]+)\'', line)
+                    self.table_name = reg_table_name.group(1)
+                    # find table size
+                    try:
+                        reg_table_size = re.search(r'([0-9]+)-max', line)
+                        self.table_size = int(reg_table_size.group(1))
+                    except AttributeError:
+                        pass
+                    # find button position
+                    reg_button_position = re.search(r'Seat #([0-9]+)', line)
+                    self.button_seat = int(reg_button_position.group(1))
+
+                # count the number of players in the game
+                elif line[0:4] == "Seat":
+                    players_number += 1
+                    self.players_number = players_number
+        except AttributeError:
+            # TODO: Add a better log manager
+            self.logger.warning("There is no HEADER in the current file.")
+            pass
 
     def parse_setup(self):
         """
@@ -211,7 +280,7 @@ class PokerStarsParser:
         lines = self.part_dict['HEADER'].split('\n')
         for line in lines:
             if line[0:4] == "Seat":
-                reg_player = re.search('(.): (.+) \(\$?([0-9-.]+)', line)
+                reg_player = re.search(r'(.): (.+) \(€?([0-9-.]+)', line)
                 player_seat = int(reg_player.group(1))
                 player_name = reg_player.group(2)
                 player_stack = float(reg_player.group(3))
@@ -227,58 +296,42 @@ class PokerStarsParser:
         method.
 
         :param seat: The player seat
-        :return: It returns the player position
+        :return: It returns the player position from position_name_list
         """
         index = seat - self.button_seat
         return PokerStarsParser.position_name_list[self.players_number-2][index]
 
+    def parse_preflop(self):
+        """
+        Define the hero cards, and the preflop actions
 
-    # def header_tournament_parser(self, lines):
-    #     """
-    #     Parse a tournament header hand history file which gives the current
-    #     blinds, the buy-in the date and hour of the hand
-    #     """
-    #     line = lines[0].split(" ")
-    #     self.current_game.buy_in = float(line[5].split("+")[0][1:]) + float(line[5].split("+")[1][1:])
-    #     self.current_game.rake = float(line[5].split("+")[1][1:])
-    #     blinds = line[13].split("/")
-    #     # TODO: Check if the ante is set with the SB and BB here
-    #     self.current_hand.small_blind = int(blinds[0][1:])
-    #     self.current_hand.big_blind = int(blinds[1][:-1])
-    #     self.current_hand.date = line[15]
-    #     self.current_game.date = line[15]
-    #     self.current_hand.hour = line[16]
-    #
-    # def setup_parser(self, lines):
-    #     """
-    #     Find the button position and all the player at the table with
-    #     their associated stack
-    #     """
-    #     line = lines[0].split(" ")
-    #     flag = 0
-    #     for word in line:
-    #         if flag == 1:
-    #             button_position = int(word[1:])
-    #             self.current_hand.dealer = button_position
-    #             break
-    #         if word == "Seat":
-    #             flag = 1
-    #     i = 1
-    #     line = lines[i].split(" ")
-    #     while line[0] == "Seat":
-    #         new_player = Player(line[2])
-    #         new_player_seat = int(line[1][:-1])
-    #         new_player_stack = int(line[3][1:])
-    #         self.current_hand.pseudo_seats[new_player.pseudo] = new_player_seat
-    #         self.current_hand.seats[new_player_seat] = SeatInfo(new_player,
-    #                                                             new_player_stack,
-    #                                                             [Card(), Card()])
-    #         i += 1
-    #         if i < len(lines):
-    #             line = lines[i].split(" ")
-    #         else:
-    #             break
-    #
+        :return: The player and and the actions
+        """
+        try:
+            lines = self.part_dict['HOLE CARDS'].split('\n')
+            for line in lines:
+                if line[0:5] == "Dealt":
+                    try:
+                        reg_hero_hand = re.search(r'Dealt to (.+) \[(.+)\]', line)
+                        hand = reg_hero_hand.group(2).split(' ')
+                        # set the cards of the player
+                        self.cards[self.players[reg_hero_hand.group(1)]] = [define_card(hand[0]), define_card(hand[1])]
+                    except AttributeError:
+                        pass
+                else:
+                    print(line)
+                    try:
+                        result = read_action(line)
+                        print(result)
+                        pseudo = result[0]
+                        action_type = result[1]
+                        amount = result[2]
+                        self.action_preflop.append(Action(self.players[pseudo], action_type, amount))
+                    except AttributeError:
+                        pass
+        except AttributeError:
+            pass
+
     # def preflop_parser(self, lines):
     #     """
     #     Read the preflop actions. Set the hand's main player (which is

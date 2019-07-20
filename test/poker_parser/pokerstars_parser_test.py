@@ -1,10 +1,10 @@
-from poker_parser.pokerstars_parser import PokerStarsParser
+from poker_parser.pokerstars_parser import PokerStarsParser, Card, Value, Color, ActionType, read_action
 
 
-def test_parse_header():
+def test_parse_header_and_setup():
     parser = PokerStarsParser(" ")
 
-    line = "PokerStars Hand #202004455940: Tournament #202004455940, €0.93+€0.07 EUR Hold'em No Limit " \
+    line = "PokerStars Hand #202004455940: Tournament #2642898548, €0.93+€0.07 EUR Hold'em No Limit " \
            "- Level I (10/20) - 2019/07/04 21:31:39 CET [2019/07/04 15:31:39 ET] \n" \
            "Table '2642898548 1' 3-max Seat #1 is the button\n" \
            "Seat 1: leti5795 (500 in chips)\n" \
@@ -17,7 +17,7 @@ def test_parse_header():
     parser.parse_header()
     # Main Header
     assert parser.hand_id == 202004455940
-    assert parser.game_id == 202004455940
+    assert parser.game_id == 2642898548
     assert parser.buy_in == 1
     assert parser.small_blind == 10
     assert parser.big_blind == 20
@@ -35,7 +35,50 @@ def test_parse_header():
     assert parser.stacks["BB"] == 500
     assert parser.players["leti5795"] == "BTN"
     assert parser.players["onucee"] == "SB"
-    assert parser.players["MaGiCLeTuR"] == "BB"
+
+
+def test_read_action():
+    line = "leti5795: calls 20"
+
+    pseudo, action_type, amount = read_action(line)
+
+    assert pseudo == "leti5795"
+    assert action_type == ActionType.CALL
+    assert amount == 20
+
+
+def test_parse_preflop():
+    parser = PokerStarsParser("")
+
+    line = "Dealt to MaGiCLeTuR [2s Ah]\n" \
+           "leti5795: calls 20\n" \
+           "onucee: calls 10\n" \
+           "MaGiCLeTuR: checks\n"
+    
+    parser.hand_id = 202004455940
+    parser.game_id = 2642898548
+    parser.buy_in = 1
+    parser.small_blind = 10
+    parser.big_blind = 20
+    parser.positions["BTN"] = "leti5795"
+    parser.positions["SB"] = "onucee"
+    parser.positions["BB"] = "MaGiCLeTuR"
+    parser.stacks["BTN"] = 500
+    parser.stacks["SB"] = 500
+    parser.stacks["BB"] = 500
+    parser.players["leti5795"] = "BTN"
+    parser.players["onucee"] = "SB"
+    parser.players["MaGiCLeTuR"] = "BB"
+
+    parser.part_dict['HOLE CARDS'] = line
+
+    parser.parse_preflop()
+
+    assert parser.cards["BB"][0] == Card(Value.TWO, Color.SPADES)
+    assert parser.cards["BB"][1] == Card(Value.ACE, Color.HEARTS)
+
+    assert parser.action_preflop.__len__() == 3
+
 
 # def test_header_tournament_parser():
 #     parser = PokerStarsParser()

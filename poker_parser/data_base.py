@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS t_game(
 conn.commit()
 
 
-
 cursor.execute("""
 INSERT INTO tournament(d_date, d_buyIn, d_prizePool, d_format, d_place, d_nbPlayer, d_earnings) VALUES(?, ?)""", ("olivier", 30))
 
