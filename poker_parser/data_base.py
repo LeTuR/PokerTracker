@@ -6,10 +6,10 @@ game_test.date = "08/07/2019 22:50:25"
 game_test.buy_in = 23
 game_test.rake = 2
 game_test.prizePool = 50
+game_test.nbPlayer = 3
 game_test.gameFormat = "Hold'em No Limit"
-game.nbPlayer = 0
-game.position = 0
-game.earning = 0
+game_test.position = 1
+game_test.earning = 50
 
 conn = sqlite3.connect('my_data_base')
 
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS t_game(
     d_rake INTEGER
     d_prizePool INTEGER
     d_format TEXT
-    d_place INTEGER
+    d_position INTEGER
     d_nbPlayer INTEGER
     d_earnings INTEGER
 )
