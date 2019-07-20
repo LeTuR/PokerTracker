@@ -94,14 +94,17 @@ def print_table_game():
         cursor = conn.cursor()
         cursor.execute("""
         SELECT d_id, d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings FROM t_game""")
-        res = cursor.fetchone()
-        print(res)
+        rows = cursor.fetchall()
+        for row in rows:
+            print('{0} : {1} - {2} - {3} - {4} - {5} - {6} - {7} - {8}'.format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]))
     except sqlite3.OperationalError:
         print('Erreur print impossible')
     except Exception as e:
         print("Erreur")
         # raise e
 
+
+create_table_game()
 
 game_test = Game()
 game_test.date = "08/07/2019 22:50:25"
@@ -113,8 +116,18 @@ game_test.gameFormat = "Hold'em No Limit"
 game_test.position = 1
 game_test.earning = 50
 
-
-create_table_game()
 insert_game_to_table_game(game_test)
+
+game_test.date = "08/07/2019 23:53:25"
+game_test.buy_in = 23
+game_test.rake = 2
+game_test.prizePool = 50
+game_test.nbPlayer = 3
+game_test.gameFormat = "Hold'em No Limit"
+game_test.position = 2
+game_test.earning = 0
+
+insert_game_to_table_game(game_test)
+
 print_table_game()
 delete_table_game()
