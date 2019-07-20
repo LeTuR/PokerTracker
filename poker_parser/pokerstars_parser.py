@@ -197,10 +197,11 @@ class PokerStarsParser:
         self.logger = logging.getLogger()
         self.formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 
-    def parser_part(self):
+    def parse_part(self):
         """
-        Return a dict of the different division of the hand history
         Not all hands have the name number of parts, it return a dict with the part name as key and content as value
+
+        :return: Return a dict of the different division of the hand history
         """
         parts = []
         for part in re.split(r'\*\*\* ([A-Z- ]+) \*\*\*', self.hand_file):  # return [ 'part1', 'splitter1', 'part2',..
@@ -208,9 +209,10 @@ class PokerStarsParser:
 
         for i in range(0, len(parts)):
             if i == 0:
-                self.part_dict['HEADER'] = parts[i].split('\n')
+                self.part_dict['HEADER'] = parts[i]
             if i % 2 != 0:  # number is odd
-                self.part_dict[parts[i]] = parts[i + 1].split('\n')
+                self.part_dict[parts[i]] = parts[i + 1]
+
 
     def parse_header(self):
         """
@@ -306,6 +308,7 @@ class PokerStarsParser:
 
         :return: The player and and the actions
         """
+        # TODO: refactor preflop, flop, turn and river in order to have one function only
         try:
             lines = self.part_dict['HOLE CARDS'].split('\n')
             for line in lines:
@@ -320,6 +323,8 @@ class PokerStarsParser:
                 if line[0:8] == "Uncalled":
                     # TODO: add a better Uncalled manager
                     break
+                elif line == '':
+                    pass
                 else:
                     try:
                         pseudo, action_type, amount = read_action(line)
@@ -334,7 +339,6 @@ class PokerStarsParser:
             lines = self.part_dict['FLOP'].split('\n')
             for i in range(0, len(lines)):
                 if i == 0:
-                    print(lines[i])
                     try:
                         reg_board = re.search(r'\[(.+)\]', lines[i])
                         board = reg_board.group(1).split(' ')
@@ -345,6 +349,8 @@ class PokerStarsParser:
                 elif lines[i][0:8] == "Uncalled":
                     # TODO: add a better Uncalled manager
                     break
+                elif lines[i] == '':
+                    pass
                 else:
                     try:
                         pseudo, action_type, amount = read_action(lines[i])
@@ -354,205 +360,91 @@ class PokerStarsParser:
         except AttributeError:
             pass
 
+    def parse_turn(self):
+        try:
+            lines = self.part_dict['TURN'].split('\n')
+            for i in range(0, len(lines)):
+                if i == 0:
+                    try:
+                        reg_board = re.search(r'\[(.+)\] \[(.+)\]', lines[i])
+                        board = reg_board.group(2).split(' ')
+                        for card in board:
+                            self.board_turn.append(define_card(card))
+                    except AttributeError:
+                        pass
+                elif lines[i][0:8] == "Uncalled":
+                    # TODO: add a better Uncalled manager
+                    break
+                elif lines[i] == '':
+                    pass
+                else:
+                    try:
+                        pseudo, action_type, amount = read_action(lines[i])
+                        self.action_turn.append(Action(self.players[pseudo], action_type, amount))
+                    except AttributeError:
+                        pass
+        except AttributeError:
+            pass
 
-    # def flop_parser(self, lines):
-    #     """
-    #     Read the flop cards and the flop action. Check if the hand
-    #     is over
-    #     """
-    #     flop = lines[0].split(" ")[3:]
-    #     # read the first card
-    #     first_card_value = define_card_value(flop[0][1])
-    #     first_card_color = define_card_color(flop[0][2])
-    #     first_card = Card(first_card_value, first_card_color)
-    #     # read the second card
-    #     second_card_value = define_card_value(flop[1][0])
-    #     second_card_color = define_card_color(flop[1][1])
-    #     second_card = Card(second_card_value, second_card_color)
-    #     # read the third card
-    #     third_card_value = define_card_value(flop[2][0])
-    #     third_card_color = define_card_color(flop[2][1])
-    #     third_card = Card(third_card_value, third_card_color)
-    #     self.current_hand.board_flop = [first_card,
-    #                                     second_card,
-    #                                     third_card]
-    #     for line in lines[1:]:
-    #         words = line.split(" ")
-    #         if words[0] == "Uncalled":
-    #             break
-    #         elif words[1] == "raises":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[4])
-    #             action = Action(action_type, amount)
-    #         elif words[1] == "bets" or words[1] == "calls":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[2])
-    #             action = Action(action_type, amount)
-    #         else:
-    #             action_type = define_action(words[1])
-    #             action = Action(action_type)
-    #         self.current_hand.action_flop.append(action)
-    #
-    # def turn_parser(self, lines):
-    #     """
-    #     Read the turn card and the turn action. Check if the hand
-    #     is over
-    #     """
-    #     turn = lines[0].split(" ")[6]
-    #     # read turn card
-    #     turn_card_value = define_card_value(turn[1])
-    #     turn_card_color = define_card_color(turn[2])
-    #     turn_card = Card(turn_card_value, turn_card_color)
-    #     self.current_hand.board_turn.append(turn_card)
-    #     for line in lines[1:]:
-    #         words = line.split(" ")
-    #         if words[0] == "Uncalled":
-    #             break
-    #         elif words[1] == "raises":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[4])
-    #             action = Action(action_type, amount)
-    #         elif words[1] == "bets" or words[1] == "calls":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[2])
-    #             action = Action(action_type, amount)
-    #         else:
-    #             action_type = define_action(words[1])
-    #             action = Action(action_type)
-    #         self.current_hand.action_turn.append(action)
-    #
-    # def river_parser(self, lines):
-    #     """
-    #     Read the river card and the river action. Check if the hand
-    #     is over
-    #     """
-    #     river = lines[0].split(" ")[7]
-    #     river_card_value = define_card_value(river[1])
-    #     river_card_color = define_card_color(river[2])
-    #     river_card = Card(river_card_value, river_card_color)
-    #     self.current_hand.board_river.append(river_card)
-    #     for line in lines[1:]:
-    #         words = line.split(" ")
-    #         if words[0] == "Uncalled":
-    #             break
-    #         elif words[1] == "raises":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[4])
-    #             action = Action(action_type, amount)
-    #         elif words[1] == "bets" or words[1] == "calls":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[2])
-    #             action = Action(action_type, amount)
-    #         else:
-    #             action_type = define_action(words[1])
-    #             action = Action(action_type)
-    #         self.current_hand.action_river.append(action)
-    #
-    # def show_down_parser(self, lines):
-    #     """
-    #     Read the show down cards. All the cards shown are recorded to
-    #     the SeatInfo.
-    #     """
-    #     for line in lines:
-    #         words = line.split(" ")
-    #         if words[1] == "shows":
-    #             player_pseudo = words[0][:-1]
-    #             player_first_card_value = define_card_value(words[2][1])
-    #             player_first_card_color = define_card_color(words[2][2])
-    #             player_first_card = Card(player_first_card_value,
-    #                                      player_first_card_color)
-    #             player_second_card_value = define_card_value(words[3][0])
-    #             player_second_card_color = define_card_color(words[3][1])
-    #             player_second_card = Card(player_second_card_value,
-    #                                       player_second_card_color)
-    #             player_seat = self.current_hand.pseudo_seats[player_pseudo]
-    #             self.current_hand.seats[player_seat].cards = [player_first_card,
-    #                                                           player_second_card]
-    #
-    # def hand_parser(self, lines):
-    #     """
-    #     This methods reads a hand and redefine the self.current_hand
-    #     with the new hand
-    #     """
-    #     # TODO: optimisation are possible by removing useless lines copy
-    #
-    #     # reset current_hand
-    #     self.current_hand = Hand()
-    #
-    #     # read header
-    #     # TODO: add a selection for the header
-    #     self.header_tournament_parser(lines[0])
-    #
-    #     line_counter = 0
-    #     flop_flag = False
-    #     flag_turn = False
-    #     flag_river = False
-    #     flag_show_down = False
-    #
-    #     # find the setup
-    #     setup_lines = []
-    #     for line in lines[1:]:
-    #         if line == "*** HOLE CARDS ***":
-    #             break
-    #         setup_lines.append(line)
-    #         line_counter += 1
-    #     self.setup_parser(setup_lines)
-    #
-    #     # read preflop and check for an eventual flop
-    #     preflop_lines = []
-    #     for line in lines[1+line_counter+1:]:
-    #         if line.split(" ")[0] == "***":
-    #             if line.split(" ")[1] == "FLOP":
-    #                 flop_flag = True
-    #             break
-    #         else:
-    #             preflop_lines.append(line)
-    #             line_counter += 1
-    #     self.preflop_parser(preflop_lines)
-    #
-    #     # read eventual flop and check for an eventual turn
-    #     if flop_flag:
-    #         flop_lines = []
-    #         for line in lines[1+line_counter:]:
-    #             if line.split(" ")[0] == "***":
-    #                 if line.split(" ")[1] == "TURN":
-    #                     flag_turn = True
-    #                 break
-    #             else:
-    #                 flop_lines.append(lines)
-    #                 line_counter += 1
-    #         self.flop_parser(flop_lines)
-    #
-    #     if flag_turn:
-    #         turn_lines = []
-    #         for line in lines[1+line_counter:]:
-    #             if line.split(" ")[0] == "***":
-    #                 if line.split(" ")[1] == "RIVER":
-    #                     flag_river = True
-    #                 break
-    #             else:
-    #                 turn_lines.append(lines)
-    #                 line_counter += 1
-    #         self.turn_parser(turn_lines)
-    #
-    #     if flag_river:
-    #         river_lines = []
-    #         for line in lines[1+line_counter:]:
-    #             if line.split(" ")[0] == "***":
-    #                 if line.split(" ")[1] == "SHOW":
-    #                     flag_show_down = True
-    #                 break
-    #             else:
-    #                 river_lines.append(lines)
-    #                 line_counter += 1
-    #         self.river_parser(river_lines)
-    #
-    #     if flag_show_down:
-    #         show_down_lines = []
-    #         for line in lines[1+line_counter+1:]:
-    #             if line.split(" ")[1] == "SUMMARY":
-    #                 break
-    #             else:
-    #                 show_down_lines.append(lines)
-    #                 line_counter += 1
-    #         self.show_down_parser(show_down_lines)
+    def parse_river(self):
+        try:
+            lines = self.part_dict['RIVER'].split('\n')
+            for i in range(0, len(lines)):
+                if i == 0:
+                    try:
+                        reg_board = re.search(r'\[(.+)\] \[(.+)\]', lines[i])
+                        board = reg_board.group(2).split(' ')
+                        for card in board:
+                            self.board_river.append(define_card(card))
+                    except AttributeError:
+                        pass
+                elif lines[i][0:8] == "Uncalled":
+                    # TODO: add a better Uncalled manager
+                    break
+                elif lines[i] == '':
+                    pass
+                else:
+                    try:
+                        pseudo, action_type, amount = read_action(lines[i])
+                        self.action_river.append(Action(self.players[pseudo], action_type, amount))
+                    except AttributeError:
+                        pass
+        except AttributeError:
+            pass
+
+    def parse_showdown(self):
+        try:
+            lines = self.part_dict['SHOW DOWN'].split('\n')
+            for line in lines:
+                try:
+                    reg_show = re.search(r'(.+): shows \[(.+)\]', line)
+                    player = reg_show.group(1)
+                    hand = reg_show.group(2).split(' ')
+                    cards = []
+                    for card in hand:
+                        cards.append(define_card(card))
+                    try:
+                        if self.cards[self.players[player]].__len__() > len(cards):
+                            self.cards[self.players[player]] = cards
+                    except KeyError:
+                        self.cards[self.players[player]] = cards
+                except AttributeError:
+                    pass
+        except AttributeError:
+            pass
+
+    def parse_hand(self):
+        """
+        Parse all the hand
+
+        :return:
+        """
+        self.parse_part()
+        self.parse_header()
+        self.parse_setup()
+        self.parse_preflop()
+        self.parse_flop()
+        self.parse_turn()
+        self.parse_river()
+        self.parse_showdown()
+
