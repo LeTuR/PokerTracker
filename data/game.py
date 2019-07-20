@@ -21,6 +21,9 @@ class Game:
         self.rake = 0
         self.prizePool = 0
         self.gameFormat = ""
+        self.nbPlayer = 0
+        self.position = 0
+        self.earning = 0
         self.players = {}
         self.hands = {}
 
