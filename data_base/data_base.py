@@ -8,19 +8,19 @@ def create_table_game():
     :return: nothing
     """
     try:
-        conn = sqlite3.connect('db_tracker')
+        conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS t_game(
-            d_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-            d_date TEXT
-            d_buyIn INTEGER
-            d_rake INTEGER
-            d_prizePool INTEGER
-            d_nbPlayer INTEGER
-            d_format TEXT
-            d_position INTEGER
-            d_earnings INTEGER
+             d_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+             d_date TEXT,
+             d_buyIn INTEGER,
+             d_rake INTEGER,
+             d_prizePool INTEGER,
+             d_nbPlayer INTEGER,
+             d_format TEXT,
+             d_position INTEGER,
+             d_earnings INTEGER
         )
         """)
         conn.commit()
@@ -41,7 +41,7 @@ def insert_game_to_table_game(game):
     :return:
     """
     try:
-        conn = sqlite3.connect('db_tracker')
+        conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
         cursor.execute("""
         INSERT INTO t_game(d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings)\
@@ -54,8 +54,7 @@ def insert_game_to_table_game(game):
                         game.gameFormat,
                         game.position,
                         game.earning))
-
-        cursor.commit()
+        conn.commit()
     except sqlite3.OperationalError:
         print('Erreur fail to insert')
     except Exception as e:
@@ -80,7 +79,7 @@ def delete_table_game():
         conn.commit()
     except sqlite3.OperationalError:
         print('Erreur delete impossible')
-        except Exception as e:
+    except Exception as e:
         print("Erreur")
         conn.rollback()
         # raise e
@@ -94,13 +93,13 @@ def print_table_game():
     :return: nothing
     """
     try:
-        conn = sqlite3.connect('db_tracker')
+        conn = sqlite3.connect('db_tracker.db')
         cursor = conn.cursor()
-        cursor.execute("""SELECT d_id, date FROM t_game""")
+        cursor.execute("""SELECT d_date, d_buyIn, d_id FROM t_game""")
         res = cursor.fetchone()
         print(res)
     except sqlite3.OperationalError:
-        print('Erreur delete impossible')
+        print('Erreur print impossible')
     except Exception as e:
         print("Erreur")
         # raise e
@@ -116,7 +115,8 @@ game_test.gameFormat = "Hold'em No Limit"
 game_test.position = 1
 game_test.earning = 50
 
+
 create_table_game()
-insert_game_to_table_game(game)
+insert_game_to_table_game(game_test)
 print_table_game()
-delete_table_game()
+#delete_table_game()
