@@ -103,7 +103,7 @@ def test_parse_preflop():
 def test_parse_flop():
     parser = PokerStarsParser("")
 
-    line = "Dealt to MaGiCLeTuR [2s Ah]\n" \
+    line = " [Th Ac 8h]\n"\
            "leti5795: calls 20\n" \
            "onucee: calls 10\n" \
            "MaGiCLeTuR: checks"
@@ -122,6 +122,20 @@ def test_parse_flop():
     parser.players["leti5795"] = "BTN"
     parser.players["onucee"] = "SB"
     parser.players["MaGiCLeTuR"] = "BB"
+
+    parser.part_dict['FLOP'] = line
+
+    parser.parse_flop()
+
+    assert parser.board_flop.__len__() == 3
+    assert parser.board_flop[0] == Card(Value.TEN, Color.HEARTS)
+    assert parser.board_flop[1] == Card(Value.ACE, Color.CLUBS)
+    assert parser.board_flop[2] == Card(Value.EIGHT, Color.HEARTS)
+
+    assert parser.action_flop.__len__() == 3
+    assert parser.action_flop[0] == Action("BTN", ActionType.CALL, 20)
+    assert parser.action_flop[1] == Action("SB", ActionType.CALL, 10)
+    assert parser.action_flop[2] == Action("BB", ActionType.CHECK, 0)
 
 # def test_header_tournament_parser():
 #     parser = PokerStarsParser()
