@@ -1,16 +1,6 @@
 import sqlite3
 from data.game import Game
 
-game_test = Game()
-game_test.date = "08/07/2019 22:50:25"
-game_test.buy_in = 23
-game_test.rake = 2
-game_test.prizePool = 50
-game_test.nbPlayer = 3
-game_test.gameFormat = "Hold'em No Limit"
-game_test.position = 1
-game_test.earning = 50
-
 
 def create_table_game():
     """
@@ -36,7 +26,7 @@ def create_table_game():
         conn.commit()
     except sqlite3.OperationalError:
         print('Erreur la table existe déjà')
-    except:
+    except Exception as e:
         print("Erreur")
         conn.rollback()
         # raise e
@@ -44,9 +34,10 @@ def create_table_game():
         conn.close()
 
 
-def insert_game_to_table_game():
+def insert_game_to_table_game(game):
     """
-
+    insert a game in the game table
+    :param game: type class game
     :return:
     """
     try:
@@ -55,14 +46,14 @@ def insert_game_to_table_game():
         cursor.execute("""
         INSERT INTO t_game(d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings)\
         ...VALUES(?,?,?,?,?,?,?,?)""",
-                       (game_test.date,
-                        game_test.buy_in,
-                        game_test.rake,
-                        game_test.prizePool,
-                        game_test.nbPlayer,
-                        game_test.gameFormat,
-                        game_test.position,
-                        game_test.earning))
+                       (game.date,
+                        game.buy_in,
+                        game.rake,
+                        game.prizePool,
+                        game.nbPlayer,
+                        game.gameFormat,
+                        game.position,
+                        game.earning))
 
         cursor.commit()
     except sqlite3.OperationalError:
@@ -73,3 +64,59 @@ def insert_game_to_table_game():
         # raise e
     finally:
         conn.close()
+
+
+def delete_table_game():
+    """
+    delete table t_game
+    :return:
+    """
+    try:
+        conn = sqlite3.connect('db_tracker')
+        cursor = conn.cursor()
+        cursor.execute("""
+        DROP TABLE t_game
+        """)
+        conn.commit()
+    except sqlite3.OperationalError:
+        print('Erreur delete impossible')
+        except Exception as e:
+        print("Erreur")
+        conn.rollback()
+        # raise e
+    finally:
+        conn.close()
+
+
+def print_table_game():
+    """
+    affiche la table game id and date
+    :return: nothing
+    """
+    try:
+        conn = sqlite3.connect('db_tracker')
+        cursor = conn.cursor()
+        cursor.execute("""SELECT d_id, date FROM t_game""")
+        res = cursor.fetchone()
+        print(res)
+    except sqlite3.OperationalError:
+        print('Erreur delete impossible')
+    except Exception as e:
+        print("Erreur")
+        # raise e
+
+
+game_test = Game()
+game_test.date = "08/07/2019 22:50:25"
+game_test.buy_in = 23
+game_test.rake = 2
+game_test.prizePool = 50
+game_test.nbPlayer = 3
+game_test.gameFormat = "Hold'em No Limit"
+game_test.position = 1
+game_test.earning = 50
+
+create_table_game()
+insert_game_to_table_game(game)
+print_table_game()
+delete_table_game()
