@@ -21,15 +21,14 @@ CREATE TABLE IF NOT EXISTS t_game(
     d_buyIn INTEGER
     d_rake INTEGER
     d_prizePool INTEGER
+    d_nbPlayer INTEGER
     d_format TEXT
     d_position INTEGER
-    d_nbPlayer INTEGER
     d_earnings INTEGER
 )
 """)
 conn.commit()
 
-
 cursor.execute("""
-INSERT INTO tournament(d_date, d_buyIn, d_prizePool, d_format, d_place, d_nbPlayer, d_earnings) VALUES(?, ?)""", ("olivier", 30))
+INSERT INTO tournament(d_date, d_buyIn, d_rake, d_prizePool, d_nbPlayer, d_format, d_position, d_earnings) VALUES(?,?,?,?,?,?,?,?)""", (game_test.date,game_test.buy_in))
 
