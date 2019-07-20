@@ -324,7 +324,7 @@ class PokerStarsParser:
                     try:
                         pseudo, action_type, amount = read_action(line)
                         self.action_preflop.append(Action(self.players[pseudo], action_type, amount))
-                    except AttributeError:
+                    except TypeError:
                         pass
         except AttributeError:
             pass
@@ -334,14 +334,15 @@ class PokerStarsParser:
             lines = self.part_dict['FLOP'].split('\n')
             for i in range(0, len(lines)):
                 if i == 0:
+                    print(lines[i])
                     try:
-                        reg_board = re.search(r'\[([A-Z0-9a-c]+)\]', lines[i])
-                        reg_board = reg_board.group(1).split(' ')
-                        for card in reg_board:
+                        reg_board = re.search(r'\[(.+)\]', lines[i])
+                        board = reg_board.group(1).split(' ')
+                        for card in board:
                             self.board_flop.append(define_card(card))
                     except AttributeError:
                         pass
-                if lines[i][0:8] == "Uncalled":
+                elif lines[i][0:8] == "Uncalled":
                     # TODO: add a better Uncalled manager
                     break
                 else:
