@@ -22,7 +22,7 @@ class Action:
         self.position = position
 
     def __eq__(self, other):
-        if self.action_type == other.action_type and self.amount == other.amount:
+        if self.action_type == other.action_type and self.amount == other.amount and self.position == other.position:
             return True
         else:
             return False

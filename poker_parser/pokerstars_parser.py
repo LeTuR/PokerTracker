@@ -106,10 +106,9 @@ def read_action(line):
     :return: a Player Pseudo and an Action [pseudo, action_type, amount]
     """
     try:
-        reg_action = re.search(r'(.)+: (.)+', line)
+        reg_action = re.search(r'(.+): ([a-z]+)', line)
         player_pseudo = reg_action.group(1)
         action_type = define_action(reg_action.group(2))
-        print(reg_action.group(2))
         if action_type == ActionType.CHECK:
             return [player_pseudo, action_type, 0]
         elif action_type == ActionType.FOLD:
@@ -124,7 +123,7 @@ def read_action(line):
             amount = float(re.search('to €?([0-9-.]+)', line).group(1))
             return [player_pseudo, action_type, amount]
         else:
-            return
+            return [None, None, None]
 
     except AttributeError:
         pass
@@ -318,57 +317,43 @@ class PokerStarsParser:
                         self.cards[self.players[reg_hero_hand.group(1)]] = [define_card(hand[0]), define_card(hand[1])]
                     except AttributeError:
                         pass
+                if line[0:8] == "Uncalled":
+                    # TODO: add a better Uncalled manager
+                    break
                 else:
-                    print(line)
                     try:
-                        result = read_action(line)
-                        print(result)
-                        pseudo = result[0]
-                        action_type = result[1]
-                        amount = result[2]
+                        pseudo, action_type, amount = read_action(line)
                         self.action_preflop.append(Action(self.players[pseudo], action_type, amount))
                     except AttributeError:
                         pass
         except AttributeError:
             pass
 
-    # def preflop_parser(self, lines):
-    #     """
-    #     Read the preflop actions. Set the hand's main player (which is
-    #     the perspective). Set the main player hand. Read the preflop actions
-    #     and check if the hand is over preflop
-    #     """
-    #     hand = lines[0].split(" ")[3:5]
-    #     # read first card
-    #     first_card_value = define_card_value(hand[0][1])
-    #     first_card_color = define_card_color(hand[0][2])
-    #     first_card = Card(first_card_value, first_card_color)
-    #     # read second card
-    #     second_card_value = define_card_value(hand[1][0])
-    #     second_card_color = define_card_color(hand[1][1])
-    #     second_card = Card(second_card_value, second_card_color)
-    #     # read who's player perspective the hand is
-    #     player = lines[0].split(" ")[2]
-    #     position = self.current_hand.pseudo_seats[player]
-    #     self.current_hand.seats[position].cards = [first_card, second_card]
-    #
-    #     for line in lines[1:]:
-    #         words = line.split(" ")
-    #         if words[0] == "Uncalled":
-    #             break
-    #         elif words[1] == "raises":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[4])
-    #             action = Action(action_type, amount)
-    #         elif words[1] == "bets" or words[1] == "calls":
-    #             action_type = define_action(words[1])
-    #             amount = float(words[2])
-    #             action = Action(action_type, amount)
-    #         else:
-    #             action_type = define_action(words[1])
-    #             action = Action(action_type)
-    #         self.current_hand.action_peflop.append(action)
-    #
+    def parse_flop(self):
+        try:
+            lines = self.part_dict['FLOP'].split('\n')
+            for i in range(0, len(lines)):
+                if i == 0:
+                    try:
+                        reg_board = re.search(r'\[([A-Z0-9a-c]+)\]', lines[i])
+                        reg_board = reg_board.group(1).split(' ')
+                        for card in reg_board:
+                            self.board_flop.append(define_card(card))
+                    except AttributeError:
+                        pass
+                if lines[i][0:8] == "Uncalled":
+                    # TODO: add a better Uncalled manager
+                    break
+                else:
+                    try:
+                        pseudo, action_type, amount = read_action(lines[i])
+                        self.action_flop.append(Action(self.players[pseudo], action_type, amount))
+                    except AttributeError:
+                        pass
+        except AttributeError:
+            pass
+
+
     # def flop_parser(self, lines):
     #     """
     #     Read the flop cards and the flop action. Check if the hand
