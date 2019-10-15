@@ -1,0 +1,11 @@
+QLabel#playerChips {
+    background: darkgrey;
+}
+
+QWidget#player {
+    background-color: transparent;
+}
+
+QWidget#table {
+    background-color: azure;
+}
