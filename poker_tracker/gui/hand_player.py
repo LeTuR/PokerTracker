@@ -14,6 +14,81 @@ redbackJPG = './poker_tracker/gui/card/background/redback.jpg'
 
 redbackPNG = './poker_tracker/gui/card/background/redback.png'
 
+
+class Table(QtWidgets.QWidget):
+    """"The Table widget display the table and the players
+
+        The Table widget uses the Player widget in order to display all the player.
+        The table is represented by an ellipse with a customizable size and color.
+        Player widget are positionated around the table according to the max capacity
+        of the table set by the game format (heads-up, spin and go, 6-max, etc).
+        
+        Attributes:
+            number_max_players (int): define the maximum number of players at the table
+            players (array): all the players widget on the table with the according
+                coordinates
+            a (int): the ellipse's half width representing the table
+            b (int): the ellipse's half height representing the table
+    """""
+    def __init__(self):
+        super().__init__()
+        self.setObjectName('table')
+
+        self.number_max_players = 2
+        self.players = []
+        for i in range(0, 2):
+            self.players.append((Player(), QtCore.QPoint()))
+        self.players[0][0].set_hand(card.Card(card.Value.EIGHT, card.Color.CLUBS), card.Card(card.Value.KING, card.Color.DIAMONDS))
+        # for player, pos in self.players :
+        #     player.setHand(card.Card(card.Value.EIGHT, card.Color.CLUBS), card.Card(card.Value.KING, card.Color.DIAMONDS))
+        # Table size
+        self.a = 300
+        self.b = 175
+
+        self.set_player_pos()
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
+
+        painter.setPen(QtGui.Qt.black)
+        painter.setBrush(QtGui.Qt.green)
+        painter.drawEllipse(self.width()/2 - self.a, self.height()/2 - self.b, 2*self.a, 2*self.b)
+        self.set_player_pos()
+        k = 0
+        for player, pos in self.players:
+            player.render(painter, pos)
+            k += 1
+        return super().paintEvent(event)
+
+    def set_player_pos(self):
+        """ Set the all the Player widget coordinates
+            
+            Set the all the Player widget coordinates in order to be displayed around the
+            table. An offset of PI/2 is added in order to set the players[0] on the bottom
+            side of the table.
+        """
+        k = 0
+        for player, pos in self.players:
+            theta = 2*math.pi * k / self.number_max_players + math.pi / 2
+            x = self.a * math.cos(theta) + self.a - player.width / 2 + self.width()/2 - self.a
+            y = self.b * math.sin(theta) + self.b - player.height / 2 + self.height()/2 - self.b
+            k += 1
+            pos.setX(x)
+            pos.setY(y)
+        self.update()
+
+    def add_player(self):
+        return
+    
+    def remove_player(self):
+        return
+
+
+
+
 class Player(QtWidgets.QWidget):
     """The Player widget displays the player information
 
