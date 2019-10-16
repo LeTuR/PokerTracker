@@ -13,6 +13,54 @@ clubsPNG = './poker_tracker/gui/card/color/clubs.png'
 redbackJPG = './poker_tracker/gui/card/background/redback.jpg'
 
 redbackPNG = './poker_tracker/gui/card/background/redback.png'
+
+class Player(QtWidgets.QWidget):
+    """The Player widget displays the player information
+
+        The player visualization widget will display the hand of the player by using
+        the Card widget. It also displays all the information concerning the player
+        such as the chip stack, pseudo. The player's information is set with a
+        QGridLayout.
+
+        Attribute:
+            width (int): the width of the player widget
+            height (int): the height of the player widget
+            card_1 (card.Card): one card in the hand of the player
+            card_2 (card.Card): one card in the hand of the player
+            chips (float): the chip stack of the player
+            chips_label (QtWidgets.QLabel): QLabel representing the chips info
+            layout (QtWidgets.QGridLayout): the layout used to display the 
+                player information. 
+
+        TODO set a dynamic hand size for the player (allowing omaha and other variations)
+    """
+    def __init__(self):
+        super().__init__()
+        self.setObjectName('player')
+
+        self.width = 140
+        self.height = 180
+        self.resize(self.width, self.height)
+
+        self.card_1 = Card()
+        self.card_2 = Card()
+        self.chips = 0
+
+        self.chips_label = QtWidgets.QLabel(text='Chips : ' + self.chips.__str__())
+        self.chips_label.setObjectName('playerChips')
+
+        self.layout = QtWidgets.QGridLayout()
+        
+        self.layout.addWidget(self.card_1, 0, 0)
+        self.layout.addWidget(self.card_2, 0, 1)
+        self.layout.addWidget(self.chips_label, 1, 0, QtGui.Qt.AlignCenter)
+        self.setLayout(self.layout)
+
+    def set_hand(self, card_1=card.Card(), card_2=card.Card()):
+        self.card_1.set_card(card_1)
+        self.card_2.set_card(card_2)
+
+
 class Card(QtWidgets.QWidget):
     """ The Card visualization widget allows a card to be displayed.
     
