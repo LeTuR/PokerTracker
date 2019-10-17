@@ -1,14 +1,27 @@
 import re
 import logging
-from data.action import ActionType, Action
-from data.card import Card, Value, Color
+from poker_tracker.data.action import ActionType, Action
+from poker_tracker.data.card import Card, Value, Color
 
 
 def define_card_color(char):
-    """This function is a transcoder from PokerStars
-    cards color's representation to the data card color's representation.
-    If an unknown character is given, and UNDEFINED color is
-    return"""
+    """  A transcoder form pokerstar cards color to the data cards color.
+
+        It is a transcoder from PokerStars cards color's representation to the
+        data card color's representation. If an unknown character is given,
+        and UNDEFINED color is return.
+
+        Args:
+            char (char): The Pokerstar's character used to define a color.
+                The character can be :
+                    - an 's' for the spades.
+                    - an 'c' for the clubs.
+                    - an 'd' for the diamonds.
+                    - an 'h' for the hearts.
+        
+        Returns:
+            A Color enum
+    """
     if char == 's':
         return Color.SPADES
     elif char == 'c':
@@ -22,14 +35,18 @@ def define_card_color(char):
 
 
 def define_card_value(char):
-    """
-    This function is a transcoder from PokerStars
-    cards value representation to the data card value's representation.
-    If an unknown character is given, and UNDEFINED value is
-    return
+    """ A transcoder form pokerstars cards value to the data cards value.
+    
+        It is a transcorder from PokerStars cards value representation to
+        the data card value's representation. If an unknown character is
+        given, and UNDEFINED value is return.
 
-    :param char: the PokerStars character to represent the value of a card
-    :return: Return the card Value
+        Args:
+            char (char): The PokerStars character to represent the value of 
+                a card.        
+        
+        Returns:
+            Return Value enum
     """
     if char == '2':
         return Value.TWO
@@ -62,11 +79,17 @@ def define_card_value(char):
 
 
 def define_card(card):
-    """
-    Returns the cards as a Card
+    """ A transcorder from the Pokerstars' card to the data's card 
 
-    :param card: card string in PokerStars format
-    :return: the card as a Card
+        This function convert the Pokerstars representation of a card
+        to the data card representation. This function uses define_card_value
+        and define_card_color.
+
+        Args :
+            card (string): The representation of a card in Pokerstars format
+            
+        Returns :
+            Return a Card object
     """
     try:
         value = define_card_value(card[0])
@@ -77,12 +100,16 @@ def define_card(card):
 
 
 def define_action(char):
-    """
-    Take a PokerStars file action as an entry and
-    return an ActionType from hand.py
+    """ A transcoder from the Pokerstars' action to an ActionType
 
-    :param char: PokerStars action as entry
-    :return: ActionType from hand.py
+        Take a PokerStars file action as an entry and return an
+        ActionType from the hand.py module
+
+        Args :
+            char (string): he representation of an action in Pokerstars format
+
+        Returns:    
+            An ActionType from hand.py
     """
     if char == "checks":
         return ActionType.CHECK
@@ -99,11 +126,18 @@ def define_action(char):
 
 
 def read_action(line):
-    """
-    Read and return an action from PokerStars file
+    """ Read and return an action from PokerStars file.
 
-    :param line: an action line
-    :return: a Player Pseudo and an Action [pseudo, action_type, amount]
+        This function can be applied directly on a pokerstars line from
+        the hand history in order to read one action.
+
+        Args :
+            line (string): A Pokerstars line from the handhistory file where
+                an action is described.
+
+        Returns :
+            [pseudo, action_type, amount] A player pseudo and an action which is composed by an action type
+            and an amount of the bet.
     """
     try:
         reg_action = re.search(r'(.+): ([a-z]+)', line)
@@ -131,8 +165,45 @@ def read_action(line):
 
 
 class PokerStarsParser:
-    """
-    Parser PokerStars
+    """ A parser of PokerStars hand file
+
+        A PokerStarsParser will parse and hold the information 
+        of a complete hand.
+
+        Args:
+            hand_file (string): a string with the complete hand description
+                from a Pokerstars hand history file.
+        
+        Attributes :
+            hand_file (string): The a complete hand in Pokerstars format.
+            hand_id (int): The unique id making reference to the hand.
+            game_id (int): The unique id making reference to the tournament.
+                This id do not exist for cash games.
+            game_mode (string): The poker game format (Texas Hold'em No Limit, Omaha ...)
+            buy_in (float): The buy in to the tournament (including the rake)
+            rake (float): The amount of taxes to the game
+            small_blind (float): The current small blind
+            big_blind (float): The current big blind
+            ante (float): The ante amount
+            date (string): The day mm/dd/year
+            hour (string): The hour hh:mm:ss
+            table_name (string): The table name (mostly for cash game)
+            table_size (int): The maximum capacity at the table
+            player_number(int): Indicate the current number of players at the table
+            button_seat (int): Indicate the seat with the button
+            cards (dict): Cards of the players referenced by the position_name
+            stacks (dict): Stacks of the players referenced by the position_name
+            players (dict): Positions referenced by the players pseudo
+            positions (dict): Players referenced by the positions
+            action_preflop (list): List of all the action preflop
+            action_flop (list): List of all the action flop
+            action_turn (list): List of all the action turn
+            action_river (list): List of all the action river 
+            board_flop (list): List of the flop cards
+            board_turn (list): List of the turn cards
+            board_river (list): List of the river cards
+            part_dict (dict):  Line with action sequence and extra info (board,
+                card dealt) referenced by the name of the part.
     """
 
     position_name_list = [
@@ -148,11 +219,6 @@ class PokerStarsParser:
     ]
 
     def __init__(self, hand_file):
-        """
-        Parse a hand given in argument.
-
-        :param hand_file: the hand to parse (basically a string)
-        """
         self.hand_file = hand_file
 
         # header info
@@ -198,10 +264,13 @@ class PokerStarsParser:
         self.formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 
     def parse_part(self):
-        """
-        Not all hands have the name number of parts, it return a dict with the part name as key and content as value
+        """ Parse the hand file in different parts
+        
+            Not all hands have the name number of parts, it return a dict with the part name
+            as key and content as value
 
-        :return: Return a dict of the different division of the hand history
+            Returns:
+                Return a dict of the different division of the hand history
         """
         parts = []
         for part in re.split(r'\*\*\* ([A-Z- ]+) \*\*\*', self.hand_file):  # return [ 'part1', 'splitter1', 'part2',..
@@ -215,10 +284,10 @@ class PokerStarsParser:
 
 
     def parse_header(self):
-        """
-        Parse the header.
+        """ Parse the header.
 
-        :return: Extract the base information on the hand context.
+            Returns:
+                Extract the base information on the hand context.
         """
         players_number = 0
         try:
@@ -273,10 +342,10 @@ class PokerStarsParser:
             pass
 
     def parse_setup(self):
-        """
-        Parse the setup part which set the players pseudo, position and stack
+        """ Parse the setup part which set the players pseudo, position and stack
 
-        :return: The players pseudo, position and stack
+            Returns:
+                The players pseudo, position and stack
         """
         lines = self.part_dict['HEADER'].split('\n')
         for line in lines:
@@ -291,22 +360,26 @@ class PokerStarsParser:
                 self.stacks[position] = player_stack
 
     def position(self, seat):
-        """
-        Define the position of the player according to the seat and the
-        button position. The number of players must be set before using this
-        method.
+        """ Define the position of the player
+            
+            Define the position of the player according to the seat and the
+            button position. The number of players must be set before using this
+            method.
 
-        :param seat: The player seat
-        :return: It returns the player position from position_name_list
+            Args:
+                seat (int): The player seat
+        
+            Returns:
+                It returns the player position from position_name_list
         """
         index = seat - self.button_seat
         return PokerStarsParser.position_name_list[self.players_number-2][index]
 
     def parse_preflop(self):
-        """
-        Define the hero cards, and the preflop actions
+        """ Define the hero cards, and the preflop actions.
 
-        :return: The player and and the actions
+            Returns:
+                The player and and the actions
         """
         # TODO: refactor preflop, flop, turn and river in order to have one function only
         try:
@@ -434,10 +507,7 @@ class PokerStarsParser:
             pass
 
     def parse_hand(self):
-        """
-        Parse all the hand
-
-        :return:
+        """ Parse all the hand
         """
         self.parse_part()
         self.parse_header()
