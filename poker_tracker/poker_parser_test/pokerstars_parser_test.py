@@ -1,4 +1,4 @@
-from poker_parser.pokerstars_parser import PokerStarsParser, Card, Value, Color, Action, ActionType, read_action
+from poker_tracker.data import PokerStarsParser, Card, Value, Color, Action, ActionType, read_action
 
 
 def test_parse_header_and_setup():
