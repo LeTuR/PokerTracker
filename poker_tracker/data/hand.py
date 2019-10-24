@@ -17,7 +17,7 @@ class Hand:
     """ It defines the action on for one hand.
     
         The hand is composed by a pre-flop action, a flop action, a turn action
-        and a river action. The id is auto-generated with Hand initialization.
+        and a river action.
 
         Attributes :
             id (int): The id is unique for each hand. It can be used as a
@@ -56,13 +56,9 @@ class Hand:
                 The first action in the list is the first action that happened
                 in the game.
     """
-
-    idCounter = 1
-
     def __init__(self):
         # Class Reference
-        self.id = Hand.idCounter
-        Hand.idCounter += 1
+        self.id = 0
         # General Info
         self.game_id = 0
         # set the actual player perspective
