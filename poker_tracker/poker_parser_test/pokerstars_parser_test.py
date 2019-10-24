@@ -332,3 +332,67 @@ def test_parse_hand():
 
     file.close()
 
+
+def test_load_hand():
+    file = open(hand_test_file, encoding='UTF-8')
+    line = file.read()
+    parser = PokerStarsParser(line)
+    parser.parse_hand()
+    hand = parser.load()
+
+    # Game and Hand ID
+    assert hand.id == parser.hand_id
+    assert hand.game_id == parser.game_id
+    
+    # General Information
+    assert hand.date == parser.date
+    assert hand.hour == parser.hour
+    assert hand.dealer == parser.positions['BTN']
+    assert hand.small_blind == parser.small_blind
+    assert hand.big_blind == parser.big_blind
+    assert hand.ante == parser.ante
+
+    # Game init
+    assert hand.seats['BTN'].player == "leti5795"
+    assert hand.seats['BTN'].stack == 500
+    assert hand.seats['BTN'].cards[0] == Card()
+    assert hand.seats['BTN'].cards[1] == Card()
+
+    assert hand.seats['SB'].player == "onucee"
+    assert hand.seats['SB'].stack == 500
+    assert hand.seats['SB'].cards[0] == Card(Value.SEVEN, Color.SPADES)
+    assert hand.seats['SB'].cards[1] == Card(Value.NINE, Color.DIAMONDS)
+
+    assert hand.seats['BB'].player == "MaGiCLeTuR"
+    assert hand.seats['BB'].stack == 500
+    assert hand.seats['BB'].cards[0] == Card(Value.TWO, Color.SPADES)
+    assert hand.seats['BB'].cards[1] == Card(Value.ACE, Color.HEARTS)
+
+    # Board Flop
+    assert hand.board_flop[0] == parser.board_flop[0]
+    assert hand.board_flop[1] == parser.board_flop[1]
+    assert hand.board_flop[2] == parser.board_flop[2]
+
+    # Board Turn
+    assert hand.board_turn[0] == parser.board_turn[0]
+
+    # Board River
+    assert hand.board_river[0] == parser.board_river[0]
+
+    # Action Preflop
+    for i in range(0, hand.action_preflop.__len__()):
+        assert hand.action_preflop[i] == parser.action_preflop[i]
+
+    # Action Flop
+    for i in range(0, hand.action_flop.__len__()):
+        assert hand.action_flop[i] == parser.action_flop[i]
+    
+    # Action Turn
+    for i in range(0, hand.action_turn.__len__()):
+        assert hand.action_turn[i] == parser.action_turn[i]
+    
+    # Action River
+    for i in range(0, hand.action_river.__len__()):
+        assert hand.action_river[i] == parser.action_river[i]
+    
+    file.close()

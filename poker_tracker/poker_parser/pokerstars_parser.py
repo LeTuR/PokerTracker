@@ -1,7 +1,9 @@
 import re
 import logging
+
 from poker_tracker.data.action import ActionType, Action
 from poker_tracker.data.card import Card, Value, Color
+from poker_tracker.data.hand import Hand, SeatInfo
 
 
 def define_card_color(char):
@@ -506,6 +508,15 @@ class PokerStarsParser:
         except AttributeError:
             pass
 
+    def conclude_hand(self):
+        """ Make the final operation
+
+            TODO : This method should be removed and integrated inside the parser constructor.
+        """
+        for position in self.positions.keys():
+            if position not in self.cards:
+                self.cards[position] = (Card(), Card()) 
+
     def parse_hand(self):
         """ Parse all the hand
         """
@@ -517,4 +528,38 @@ class PokerStarsParser:
         self.parse_turn()
         self.parse_river()
         self.parse_showdown()
+        self.conclude_hand()
+    
+    def load(self):
+        hand = Hand()
 
+        # Game and Hand ID
+        hand.id = self.hand_id
+        hand.game_id = self.game_id
+
+        # General Information
+        hand.date = self.date
+        hand.hour = self.hour
+        hand.dealer = self.positions['BTN']
+        hand.small_blind = self.small_blind
+        hand.big_blind = self.big_blind
+        hand.ante = self.ante
+
+        # Game init
+        for player_pseudo, position in self.players.items():
+            seat_info = SeatInfo(player_pseudo, self.stacks[position], self.cards[position])
+            hand.seats[position] = seat_info
+            hand.pseudo_seats[player_pseudo] = position
+
+        # Board association
+        hand.board_flop = self.board_flop
+        hand.board_turn = self.board_turn
+        hand.board_river = self.board_river
+
+        # Action association
+        hand.action_preflop = self.action_preflop
+        hand.action_flop = self.action_flop
+        hand.action_turn = self.action_turn
+        hand.action_river = self.action_river
+
+        return hand
