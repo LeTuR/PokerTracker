@@ -1,4 +1,4 @@
-from data.game import Game
+from poker_tracker.data.game import Game
 
 
 def test_game_constructor():

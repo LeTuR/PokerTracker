@@ -1,5 +1,12 @@
-from poker_tracker.data import PokerStarsParser, Card, Value, Color, Action, ActionType, read_action
+import os
+script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
+rel_path = "hand"
+hand_test_file = os.path.join(script_dir, rel_path)
 
+from poker_tracker.data.card import Card, Value, Color
+from poker_tracker.data.action import Action, ActionType
+from poker_tracker.data.hand import Hand
+from poker_tracker.poker_parser.pokerstars_parser import PokerStarsParser, read_action
 
 def test_parse_header_and_setup():
     parser = PokerStarsParser(" ")
@@ -247,7 +254,7 @@ def test_parse_showdown():
 
 
 def test_parse_hand():
-    file = open("hand")
+    file = open(hand_test_file, encoding='UTF-8')
     line = file.read()
     parser = PokerStarsParser(line)
     parser.parse_hand()
@@ -316,11 +323,12 @@ def test_parse_hand():
 
     # Showdown
     assert parser.cards["SB"].__len__() == 2
-
     assert parser.cards["SB"][0] == Card(Value.SEVEN, Color.SPADES)
     assert parser.cards["SB"][1] == Card(Value.NINE, Color.DIAMONDS)
 
     assert parser.cards["BB"].__len__() == 2
     assert parser.cards["BB"][0] == Card(Value.TWO, Color.SPADES)
     assert parser.cards["BB"][1] == Card(Value.ACE, Color.HEARTS)
+
+    file.close()
 

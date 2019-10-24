@@ -1,4 +1,4 @@
-from data.player import Player
+from poker_tracker.data.player import Player
 
 
 def test_player_constructor():
