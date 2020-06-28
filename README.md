@@ -20,9 +20,42 @@ Any help is welcome.
 
 ## Setting up the environment
 
+### Visual Studio Code (Recommended) with VENV
+
+If you want to use Visual Studio Code follow this instructions.
+
+First make sure you have microsoft python extension installed ms-python.python.
+
+Create a clone of the github project :
+````
+git clone https://github.com/LeTuR/PokerTracker.git
+````
+Open Visual Studio Code then open a folder, select *PokerTracker*.
+Create a venv environement :
+
+For windows :
+```powershell
+python3.8.exe -m venv Path/to/PokerTracker/pokerenv
+```
+
+Select 'pokerenv':venv as your default interpreter.
+
+Install the requirements 
+
+```powershell
+pip install -r requirements.txt
+```
+The following instructions are not needed, your environement is ready !
+
+#### Usefull extensions
+
+pytest extension :
+
+littlefoxteam.vscode-python-test-adapter
+
 ### PyCharm and Anaconda
 
-If you want to use PyCharm follow the following instruction.
+If you want to use PyCharm follow this instructions.
 
 Download PyCharm : https://www.jetbrains.com/pycharm/
 
