@@ -1,5 +1,7 @@
 # PokerTracker
 
+PROJECT ON HOLD... (but not forgotten)
+
 Main objectives are :
 - Create parsers for the main online poker platform.
 - Create a hand player based on the hands played on online platform.
